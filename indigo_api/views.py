@@ -14,6 +14,7 @@ from rest_framework.decorators import detail_route
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import DjangoModelPermissionsOrAnonReadOnly, AllowAny
 import reversion
+from diff_match_patch import diff_match_patch as DiffMatchPatch
 
 import lxml.html.diff
 from lxml.etree import LxmlError
@@ -110,16 +111,19 @@ class DocumentViewSet(DocumentViewMixin, viewsets.ModelViewSet):
 
         super(DocumentViewSet, self).perform_update(serializer)
 
-    @detail_route(methods=['GET', 'PUT'])
+    @detail_route(methods=['GET', 'PUT', 'PATCH'])
     def content(self, request, *args, **kwargs):
-        """ This exposes a GET and PUT resource at ``/api/documents/1/content`` which allows
+        """ This exposes a GET, PUT and PATCH resource at ``/api/documents/1/content`` which allows
         the content of the document to be fetched and set independently of the metadata. This
         is useful because the content can be large.
         """
         instance = self.get_object()
 
         if request.method == 'GET':
-            return Response({'content': self.get_object().document_xml})
+            return Response({
+                'content': instance.document_xml,
+                'revision_id': instance.latest_revision.id,
+            })
 
         if request.method == 'PUT':
             try:
@@ -127,8 +131,21 @@ class DocumentViewSet(DocumentViewMixin, viewsets.ModelViewSet):
                 instance.save()
             except LxmlError as e:
                 raise ValidationError({'content': ["Invalid XML: %s" % e.message]})
+            return Response({
+                'content': instance.document_xml,
+                'revision_id': instance.latest_revision.id,
+            })
 
-            return Response({'content': instance.document_xml})
+        if request.method == 'PATCH':
+            try:
+                patches = DiffMatchPatch().patch_fromText(request.data.get('patches'))
+                instance.patch_xml(request.data.get('parent_revision_id'), patches)
+                instance.save()
+            except LxmlError as e:
+                raise ValidationError({'content': ["Invalid XML: %s" % e.message]})
+            except ValueError as e:
+                raise ValidationError({'parent_revision_id': e.message})
+            return Response({'revision_id': instance.latest_revision.id})
 
     @detail_route(methods=['GET'])
     def toc(self, request, *args, **kwargs):

@@ -12,6 +12,7 @@ from django.dispatch import receiver
 import arrow
 from taggit.managers import TaggableManager
 import reversion
+from diff_match_patch import diff_match_patch as DiffMatchPatch
 
 from countries_plus.models import Country as MasterCountry
 
@@ -260,6 +261,17 @@ class Document(models.Model):
         self._doc = doc
         self.copy_attributes(from_model=False)
 
+    def patch_xml(self, parent_revision_id, patches):
+        # TODO: the list of revisions doesn't actually include the current one,
+        # we need a different way of identifying the current revision
+
+        # check the parent revisions match
+        if self.latest_revision.id != parent_revision_id:
+            raise ValueError("Invalid parent revision id: %s" % parent_revision_id)
+
+        xml = DiffMatchPatch().patch_apply(patches, self.document_xml)[0]
+        self.reset_xml(xml)
+
     def table_of_contents(self):
         return [t.as_dict() for t in self.doc.table_of_contents()]
 
@@ -284,6 +296,10 @@ class Document(models.Model):
             .filter(version__content_type=content_type)\
             .filter(version__object_id_int=self.id)\
             .order_by('-id')
+
+    @property
+    def latest_revision(self):
+        return self.revisions()[0]
 
     def to_html(self, **kwargs):
         from .renderers import HTMLRenderer

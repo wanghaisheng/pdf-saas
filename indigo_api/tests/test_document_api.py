@@ -7,6 +7,7 @@ from mock import patch
 from nose.tools import *  # noqa
 from rest_framework.test import APITestCase
 from django.test.utils import override_settings
+from diff_match_patch import diff_match_patch as DiffMatchPatch
 
 from indigo_api.tests.fixtures import *  # noqa
 from indigo_api.renderers import PDFRenderer
@@ -163,6 +164,29 @@ class DocumentAPITest(APITestCase):
         response = self.client.get('/api/documents/%s/content' % id)
         assert_equal(response.status_code, 200)
         assert_in(u'<p>also γνωρίζω the body</p>', response.data['content'])
+
+    def test_patch_content(self):
+        response = self.client.post('/api/documents', {'frbr_uri': '/za/act/1998/2'})
+        assert_equal(response.status_code, 201)
+        id = response.data['id']
+
+        response = self.client.put('/api/documents/%s/content' % id, {'content': document_fixture(u'the body')})
+        assert_equal(response.status_code, 200)
+
+        # patch it
+        rev_id = response.data['revision_id']
+        content = response.data['content'].replace('the body', 'the mind')
+        dmp = DiffMatchPatch()
+        patches = dmp.patch_toText(dmp.patch_make(response.data['content'], content))
+
+        response = self.client.patch('/api/documents/%s/content' % id, {'patches': patches, 'parent_revision_id': rev_id})
+        assert_equal(response.status_code, 200)
+        assert_equal(response.data['revision_id'], rev_id + 1)
+        assert_not_in('content', response.data)
+
+        response = self.client.get('/api/documents/%s/content' % id)
+        assert_equal(response.status_code, 200)
+        assert_in(u'<p>the mind</p>', response.data['content'])
 
     def test_frbr_uri_lowercased(self):
         # ACT should be changed to act
