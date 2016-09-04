@@ -116,6 +116,12 @@
         patches: this.dmp.patch_toText(this.dmp.patch_make(this.lastContent, this.get('content'))),
       };
 
+      options.error = function(xhr) {
+        if (xhr.status == 400 && xhr.responseJSON.parent) {
+          Indigo.errorView.show("Your document is out of date and can't be saved. Please refresh the page.");
+        }
+      };
+
       Backbone.sync.call(this, 'patch', obj, options);
     },
 
