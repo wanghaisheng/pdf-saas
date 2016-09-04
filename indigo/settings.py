@@ -243,6 +243,7 @@ PIPELINE_JS = {
             'javascript/select2-4.0.0.min.js',
             'javascript/caret.js',
             'javascript/prettyprint.js',
+            'javascript/lib/diff-match-patch.js',
             'javascript/indigo/models.js',
             'javascript/indigo/views/user.js',
             'javascript/indigo/views/reset_password.js',

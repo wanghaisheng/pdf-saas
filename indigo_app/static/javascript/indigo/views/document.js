@@ -131,7 +131,7 @@
       this.document.trigger('sync');
 
       // preload content
-      this.documentContent.set('content', Indigo.Preloads.documentContent);
+      this.documentContent.set(Indigo.Preloads.documentContent);
 
       if (document_id) {
         // pretend this document is unchanged

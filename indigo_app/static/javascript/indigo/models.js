@@ -14,7 +14,12 @@
     initialize: function(options) {
       this.document = options.document;
       this.xmlDocument = null;
+      // last saved version of this document
+      this.lastContent = null;
+      this.dmp = new diff_match_patch();
+
       this.on('change:content', this.contentChanged, this);
+      this.on('sync', this.synced, this);
     },
 
     isNew: function() {
@@ -27,6 +32,8 @@
     },
 
     contentChanged: function(model, newValue, options) {
+      if (this.lastContent === null) this.lastContent = newValue;
+
       // don't bother updating the DOM if the source of this event
       // is a change to the DOM
       if (options.fromXmlDocument) return;
@@ -101,6 +108,21 @@
 
       return first;
     },
+
+    // We override sync and use diff-match-patch to save only the changes back to the server.
+    sync: function(method, obj, options) {
+      options.attrs = {
+        parent_revision_id: this.get('revision_id'),
+        patches: this.dmp.patch_toText(this.dmp.patch_make(this.lastContent, this.get('content'))),
+      };
+
+      Backbone.sync.call(this, 'patch', obj, options);
+    },
+
+    synced: function(model, resp, options) {
+      // this is what we'll apply patches relative to
+      this.lastContent = this.get('content');
+    }
   });
 
   Indigo.Document = Backbone.Model.extend({

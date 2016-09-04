@@ -29,7 +29,10 @@ def document(request, doc_id=None):
     return render(request, 'document/show.html', {
         'document': doc,
         'document_json': doc_json,
-        'document_content_json': json.dumps(xml),
+        'document_content_json': json.dumps({
+            'content': xml,
+            'revision_id': doc.latest_revision.id
+        }),
         'form': form,
         'subtypes': Subtype.objects.order_by('name').all(),
         'languages': Language.objects.select_related('language').all(),
