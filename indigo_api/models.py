@@ -2,6 +2,7 @@ import os
 import logging
 from itertools import groupby
 import re
+import hashlib
 
 from django.conf import settings
 from django.db import models
@@ -261,13 +262,11 @@ class Document(models.Model):
         self._doc = doc
         self.copy_attributes(from_model=False)
 
-    def patch_xml(self, parent_revision_id, patches):
-        # TODO: the list of revisions doesn't actually include the current one,
-        # we need a different way of identifying the current revision
-
-        # check the parent revisions match
-        if self.latest_revision.id != parent_revision_id:
-            raise ValueError("Invalid parent revision id: %s" % parent_revision_id)
+    def patch_xml(self, parent, patches):
+        # check the parent sha matches ours
+        sha = self.document_hash()
+        if sha != parent:
+            raise ValueError("Expected parent hash %s but got %s" % (sha, parent))
 
         xml = DiffMatchPatch().patch_apply(patches, self.document_xml)[0]
         self.reset_xml(xml)
@@ -297,9 +296,8 @@ class Document(models.Model):
             .filter(version__object_id_int=self.id)\
             .order_by('-id')
 
-    @property
-    def latest_revision(self):
-        return self.revisions()[0]
+    def document_hash(self):
+        return hashlib.sha1(self.document_xml.encode('utf-8')).hexdigest()
 
     def to_html(self, **kwargs):
         from .renderers import HTMLRenderer

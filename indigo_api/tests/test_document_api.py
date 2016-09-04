@@ -3,6 +3,7 @@
 import tempfile
 import os.path
 from mock import patch
+import hashlib
 
 from nose.tools import *  # noqa
 from rest_framework.test import APITestCase
@@ -174,19 +175,41 @@ class DocumentAPITest(APITestCase):
         assert_equal(response.status_code, 200)
 
         # patch it
-        rev_id = response.data['revision_id']
-        content = response.data['content'].replace('the body', 'the mind')
+        parent = response.data['sha']
+        content = response.data['content'].replace(u'the body', u'the mind')
+        sha = hashlib.sha1(content.encode('utf-8')).hexdigest()
         dmp = DiffMatchPatch()
         patches = dmp.patch_toText(dmp.patch_make(response.data['content'], content))
 
-        response = self.client.patch('/api/documents/%s/content' % id, {'patches': patches, 'parent_revision_id': rev_id})
+        response = self.client.patch('/api/documents/%s/content' % id, {'patches': patches, 'parent': parent})
         assert_equal(response.status_code, 200)
-        assert_equal(response.data['revision_id'], rev_id + 1)
+        assert_equal(response.data['sha'], sha)
         assert_not_in('content', response.data)
 
         response = self.client.get('/api/documents/%s/content' % id)
         assert_equal(response.status_code, 200)
         assert_in(u'<p>the mind</p>', response.data['content'])
+
+    def test_patch_content_bad_parent(self):
+        response = self.client.post('/api/documents', {'frbr_uri': '/za/act/1998/2'})
+        assert_equal(response.status_code, 201)
+        id = response.data['id']
+
+        response = self.client.put('/api/documents/%s/content' % id, {'content': document_fixture(u'the body')})
+        assert_equal(response.status_code, 200)
+
+        # patch it
+        content = response.data['content'].replace(u'the body', u'the mind')
+        dmp = DiffMatchPatch()
+        patches = dmp.patch_toText(dmp.patch_make(response.data['content'], content))
+
+        response = self.client.patch('/api/documents/%s/content' % id, {'patches': patches, 'parent': 'bad'})
+        assert_equal(response.status_code, 400)
+        assert_equal(response.data['parent'], 'Expected parent hash f89fa59177e75d915fe86c917f0e4220b4255b3e but got bad')
+
+        response = self.client.get('/api/documents/%s/content' % id)
+        assert_equal(response.status_code, 200)
+        assert_in(u'<p>the body</p>', response.data['content'])
 
     def test_frbr_uri_lowercased(self):
         # ACT should be changed to act

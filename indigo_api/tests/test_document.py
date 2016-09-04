@@ -47,3 +47,9 @@ class DocumentTestCase(TestCase):
 
         d.expression_date = None
         assert_equal(d.expression_date, None)
+
+    def test_document_hash(self):
+        d = Document()
+        d.content = document_fixture(u'γνωρίζω')
+
+        assert_equal(d.document_hash(), '6b2c211fad71c1a306919ae5a5584bedf4373f6f')

@@ -122,7 +122,7 @@ class DocumentViewSet(DocumentViewMixin, viewsets.ModelViewSet):
         if request.method == 'GET':
             return Response({
                 'content': instance.document_xml,
-                'revision_id': instance.latest_revision.id,
+                'sha': instance.document_hash(),
             })
 
         if request.method == 'PUT':
@@ -133,19 +133,19 @@ class DocumentViewSet(DocumentViewMixin, viewsets.ModelViewSet):
                 raise ValidationError({'content': ["Invalid XML: %s" % e.message]})
             return Response({
                 'content': instance.document_xml,
-                'revision_id': instance.latest_revision.id,
+                'sha': instance.document_hash(),
             })
 
         if request.method == 'PATCH':
             try:
                 patches = DiffMatchPatch().patch_fromText(request.data.get('patches'))
-                instance.patch_xml(request.data.get('parent_revision_id'), patches)
+                instance.patch_xml(request.data.get('parent'), patches)
                 instance.save()
             except LxmlError as e:
                 raise ValidationError({'content': ["Invalid XML: %s" % e.message]})
             except ValueError as e:
-                raise ValidationError({'parent_revision_id': e.message})
-            return Response({'revision_id': instance.latest_revision.id})
+                raise ValidationError({'parent': e.message})
+            return Response({'sha': instance.document_hash()})
 
     @detail_route(methods=['GET'])
     def toc(self, request, *args, **kwargs):

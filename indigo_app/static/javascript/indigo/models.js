@@ -112,7 +112,7 @@
     // We override sync and use diff-match-patch to save only the changes back to the server.
     sync: function(method, obj, options) {
       options.attrs = {
-        parent_revision_id: this.get('revision_id'),
+        parent: this.get('sha'),
         patches: this.dmp.patch_toText(this.dmp.patch_make(this.lastContent, this.get('content'))),
       };
 
