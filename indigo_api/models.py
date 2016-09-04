@@ -249,7 +249,7 @@ class Document(models.Model):
 
     def refresh_xml(self):
         log.debug("Refreshing document xml for %s" % self)
-        self.document_xml = self.doc.to_xml()
+        self.document_xml = self.doc.to_xml().decode('utf-8')
 
     def reset_xml(self, xml):
         """ Completely reset the document XML to a new value, and refresh database attributes
