@@ -10,6 +10,30 @@ from indigo_social.badges import CountryBadge
 
 
 class Command(BaseCommand):
+    """ This copies content from one Indigo instance to another, by working directly
+    with the database. It assumes that both databases have compatible models.
+
+    It copies:
+
+    * languages
+    * countries and localities
+    * users
+    * works
+    * amendments
+    * documents
+    * annotations
+    * attachment metadata (not the files themselves)
+
+    It DOES NOT copy:
+
+    * reversion versions (modifying the internal id references is difficult)
+    * deleted documents
+
+    At the end, it prints out a mapping between old document ids and new ones.
+    It also prints a mapping of old attachment storage paths to new ones.
+    The latter can be used to copy attachments between S3 buckets.
+    """
+
     help = 'Copies content from one indigo to another'
 
     def add_arguments(self, parser):
@@ -260,7 +284,7 @@ class Command(BaseCommand):
                 Attachment.objects.using(self.target_db).filter(pk=attachment.pk).update(file=new_name)
 
             # notes without parents first
-            notes = sorted(notes, key=lambda: 1 if note.in_reply_to else 0)
+            notes = sorted(notes, key=lambda n: 1 if n.in_reply_to else 0)
             parents = {}
 
             # annotations
