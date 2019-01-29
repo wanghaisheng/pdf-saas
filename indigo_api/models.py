@@ -365,7 +365,8 @@ def post_save_work(sender, instance, **kwargs):
         # pick up changes to inherited attributes
         for doc in instance.document_set.all():
             # forces call to doc.copy_attributes()
-            doc.save()
+            # doc.save()
+            pass
 
 
 class Amendment(models.Model):
@@ -403,7 +404,8 @@ def post_save_amendment(sender, instance, **kwargs):
     if not kwargs.get('raw'):
         for doc in instance.amended_work.document_set.all():
             # forces call to doc.copy_attributes()
-            doc.save()
+            # doc.save()
+            pass
 
 
 class DocumentManager(models.Manager):
