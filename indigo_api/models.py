@@ -397,11 +397,8 @@ def post_save_work(sender, instance, **kwargs):
             doc.updated_by_user = instance.updated_by_user
             doc.save()
 
-    # Send action to activity stream, as 'created' if a new work
-    if kwargs['created']:
-        action.send(instance.created_by_user, verb='created', action_object=instance,
-                    place_code=instance.place.place_code)
-    else:
+    # Send non-creation action to activity stream
+    elif not kwargs['created']:
         action.send(instance.updated_by_user, verb='updated', action_object=instance,
                     place_code=instance.place.place_code)
 
