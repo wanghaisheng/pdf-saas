@@ -205,9 +205,20 @@ class PublishedDocumentDetailView(DocumentViewMixin,
         """ Return details on many documents.
         """
         if self.request.accepted_renderer.format in ['pdf', 'epub', 'zip']:
+            queryset = self.filter_queryset(self.get_queryset())
+
+            if self.request.GET.get('cam'):
+                if self.request.GET.get('lang') == 'afr':
+                    doc_ids = "2202 2590 2313 2632 2312 2392 2316 2305 2432 2297 2256 2332 2283 2418 2417 2454 2253 2298".split()
+                else:
+                    # eng
+                    doc_ids = "2206 2590 2313 2245 2389 2326 2387 2407 2424 2292 2262 2284 2235 2276 2261 2264 2323 2233".split()
+                doc_ids = [int(i) for i in doc_ids]
+                queryset = self.get_queryset().latest_expression().filter(pk__in=doc_ids)
+
             # NB: don't try to sort in the db, that's already sorting to
             # return the latest expression of each doc. Sort here instead.
-            documents = sorted(self.filter_queryset(self.get_queryset()).all(), key=lambda d: d.title)
+            documents = sorted(queryset.all(), key=lambda d: d.title)
             # bypass pagination and serialization
             return Response(documents)
 
