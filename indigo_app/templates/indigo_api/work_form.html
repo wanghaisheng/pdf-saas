@@ -58,9 +58,28 @@
         </div>
 
         <div class="form-row">
+          <div class="form-group col-6">
+            <label for="work_doctype">docType</label>
+            <select id="work_doctype" class="form-control">
+              <option value="act" selected>act</option>
+              <option value="bill">bill</option>
+              <option value="doc">doc</option>
+              <option value="debateReport">debate report</option>
+              <option value="judgment">judgment</option>
+              <option value="statement">statement</option>
+            </select>
+          </div>
+
+          <div class="form-group col-6">
+            <label for="work_actor">actor</label>
+            <input type="text" class="form-control" id="work_actor">
+          </div>
+        </div>
+
+        <div class="form-row">
           <div class="form-group col-md-3">
             <label for="work_year" class="required">Year of introduction</label>
-            <input type="text" class="form-control" id="work_year" required pattern="\d{4}" placeholder="yyyy">
+            <input type="text" class="form-control" id="work_year" required pattern="\d{4}(-\d{2}-\d{2})?" placeholder="yyyy">
           </div>
 
           <div class="form-group col-md-6 offset-md-3">

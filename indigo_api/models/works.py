@@ -8,7 +8,6 @@ from django.db import models
 from django.db.models import signals, Q
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
-from django.contrib.contenttypes.models import ContentType
 from django.dispatch import receiver
 from django.utils.functional import cached_property
 import reversion.revisions

@@ -198,7 +198,7 @@
 
     initialize: function(options) {
       // keep frbr_uri up to date
-      this.on('change:country change:locality change:subtype change:number change:year', this.updateFrbrUri, this);
+      this.on('change:country change:locality change:nature change:subtype change:actor change:number change:year', this.updateFrbrUri, this);
     },
 
     parse: function(json) {
@@ -228,6 +228,9 @@
       parts.push(this.get('nature'));
       if (this.get('subtype')) {
         parts.push(this.get('subtype'));
+      }
+      if (this.get('actor')) {
+        parts.push(this.get('actor'));
       }
       parts.push(this.get('year'));
       parts.push(this.get('number'));

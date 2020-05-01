@@ -344,12 +344,14 @@ class Document(DocumentMixin, models.Model):
         if from_model:
             self.copy_attributes_from_work()
 
-            self.doc.title = self.title
             self.doc.frbr_uri = self.frbr_uri
+            self.doc.title = self.title
             self.doc.language = self.language.code
 
-            self.doc.work_date = self.doc.publication_date
-            self.doc.expression_date = self.expression_date or self.doc.publication_date or timezone.now()
+            # TODO:
+            # self.doc.work_date = self.doc.publication_date
+            # TODO some doctypes don't have a pub date
+            self.doc.expression_date = self.expression_date or timezone.now()
             self.doc.manifestation_date = self.updated_at or timezone.now()
             self.doc.publication_number = self.publication_number
             self.doc.publication_name = self.publication_name

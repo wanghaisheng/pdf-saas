@@ -13,7 +13,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 from rest_framework.exceptions import ValidationError
 from taggit_serializer.serializers import TagListSerializerField
-from cobalt import StructuredDocument
+from cobalt import StructuredDocument, FrbrUri
 from cobalt.akn import AKN_NAMESPACES
 import reversion
 
@@ -322,6 +322,14 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
 
         return attrs
 
+    def validate_frbr_uri(self, value):
+        try:
+            if not value:
+                raise ValueError()
+            return FrbrUri.parse(value.lower()).work_uri()
+        except ValueError:
+            raise ValidationError("Invalid FRBR URI: %s" % value)
+
     def validate_language(self, value):
         try:
             return Language.for_code(value)
@@ -380,7 +388,9 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
         # by the other properties.
         content = validated_data.pop('content', None)
         if content is not None:
-            document.reset_xml(content, from_model=True)
+            # TODO: this used to pull ALL attributes from the model,
+            # now we overwrite XML with key attributes from the model
+            document.reset_xml(content)
 
         # save rest of changes
         for attr, value in validated_data.items():
