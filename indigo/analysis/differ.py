@@ -40,7 +40,7 @@ class AKNHTMLDiffer:
     """
     akn_text_tags = 'p listIntroduction heading'.split()
     html_text_tags = 'h1 h2 h3 h4 h5'.split()
-    keep_ids_tags = 'chapter part section subsection subpart article table'
+    keep_ids_tags = 'chapter part section subsection subpart article table paragraph subparagraph'
     formatter_class = HTMLFormatter
     xmldiff_options = {
         'F': 0.75,

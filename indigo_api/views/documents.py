@@ -349,10 +349,10 @@ class ParseView(DocumentResourceView, APIView):
             raise ValidationError({'content': str(e) or "error during import"})
 
         if fragment:
-            # clean up encodings
-            doc = AkomaNtosoDocument(xml)
-            xml = doc.to_xml(encoding='unicode')
-        else:
+            # add an AkomaNtoso root to the fragment
+            xml = '<akomaNtoso xmlns="http://docs.oasis-open.org/legaldocml/ns/akn/3.0">' + xml + '</akomaNtoso>'
+
+        if not fragment:
             # The importer doesn't have enough information to give us a complete document
             # including the meta section, so it's empty or incorrect. We fold in the meta section
             # from the existing document, so that we return a complete document to the caller.
