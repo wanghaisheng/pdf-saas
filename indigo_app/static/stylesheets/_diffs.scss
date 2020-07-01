@@ -60,7 +60,9 @@
   }
 
   .akn-content.ins,
-  .akn-content.del {
+  .akn-content.del,
+  .akn-container.ins,
+  .akn-container.del {
     // akn-content is not normally a block element, but must be to get background colouring
     display: block;
   }

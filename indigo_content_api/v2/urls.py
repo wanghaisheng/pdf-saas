@@ -27,6 +27,7 @@ urlpatterns = [
     # Expression details
     # eg. /akn/za/act/2007/98/toc.json
     re_path(r'^(?P<frbr_uri>akn/[a-z]{2}[-/].*)/toc\.(?P<format>[a-z0-9]+)$', views.PublishedDocumentTOCView.as_view({'get': 'get'}), name='published-document-toc'),
+    re_path(r'^(?P<frbr_uri>akn/[a-z]{2}[-/].*)/diff\.(?P<format>[a-z0-9]+)$', views.PublishedDocumentDiffView.as_view({'get': 'get'})),
     # eg. /akn/za/act/2007/98
     re_path(r'^(?P<frbr_uri>akn/[a-z]{2}[-/].*)$', views.PublishedDocumentDetailView.as_view({'get': 'get'}), name='published-document-detail'),
 

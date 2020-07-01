@@ -38,12 +38,12 @@ class HTMLFormatter(formatting.XMLFormatter):
 class AKNHTMLDiffer:
     """ Helper class to diff AKN documents using xmldiff.
     """
-    akn_text_tags = 'p listIntroduction heading'.split()
+    akn_text_tags = 'p listIntroduction heading authorialNote'.split()
     html_text_tags = 'h1 h2 h3 h4 h5'.split()
     keep_ids_tags = 'chapter part section subsection subpart article table paragraph subparagraph'
     formatter_class = HTMLFormatter
     xmldiff_options = {
-        'F': 0.75,
+        'F': 0.70,
         # using data-refersto helps to xmldiff to handle definitions that move around
         'uniqueattrs': ['id', 'data-refersto'],
         'ratio_mode': 'faster',

@@ -7,8 +7,10 @@ from rest_framework.authentication import SessionAuthentication, TokenAuthentica
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework.versioning import NamespaceVersioning
+import lxml.html
 
 from cobalt import FrbrUri
+from indigo.analysis.differ import AttributeDiffer
 
 from indigo_api.models import Attachment, Country, Document, TaxonomyVocabulary, Locality
 from indigo_api.renderers import AkomaNtosoRenderer, PDFRenderer, EPUBRenderer, HTMLRenderer, ZIPRenderer
@@ -307,6 +309,43 @@ class PublishedDocumentTOCView(DocumentViewMixin, FrbrUriViewMixin, mixins.Retri
             add_url(item)
 
         return toc
+
+
+class PublishedDocumentDiffView(DocumentViewMixin, FrbrUriViewMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    renderer_classes = (renderers.StaticHTMLRenderer,)
+    document_queryset = Document.objects \
+        .undeleted() \
+        .published()
+
+    def get(self, request, **kwargs):
+        differ = AttributeDiffer()
+
+        local_doc = self.get_document()
+        frbr_uri = local_doc.work_uri
+
+        # get previous pit
+        remote_doc = self.get_document_queryset()\
+            .filter(frbr_uri=frbr_uri.work_uri(), expression_date__lt=local_doc.expression_date)\
+            .order_by('-expression_date')\
+            .first()
+
+        local_doc.document_xml = differ.preprocess_document_diff(local_doc.document_xml).decode('utf-8')
+        local_doc._doc = None
+        remote_doc.document_xml = differ.preprocess_document_diff(remote_doc.document_xml).decode('utf-8')
+        remote_doc._doc = None
+
+        # diff the whole document
+        local_html = local_doc.to_html()
+        remote_html = remote_doc.to_html()
+
+        local_tree = lxml.html.fromstring(local_html or "<div></div>")
+        remote_tree = lxml.html.fromstring(remote_html) if remote_html else None
+        n_changes, diff = differ.diff_document_html(remote_tree, local_tree)
+
+        if not isinstance(diff, str):
+            diff = lxml.html.tostring(diff, encoding='utf-8')
+
+        return Response(diff)
 
 
 class PublishedDocumentMediaView(FrbrUriViewMixin,
