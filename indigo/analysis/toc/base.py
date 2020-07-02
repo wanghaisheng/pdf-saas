@@ -1,6 +1,5 @@
 import re
-from itertools import chain
-from lxml.html import _collect_string_content
+import lxml.etree
 
 from django.utils.translation import override, ugettext as _
 
@@ -172,7 +171,9 @@ class TOCBuilderBase(LocaleBasedMatcher):
                     heading = _(component.capitalize())
         else:
             try:
-                heading = _collect_string_content(element.heading)
+                # collect text without descending into authorial notes
+                xpath = lxml.etree.XPath(".//text()[not(ancestor::a:authorialNote)]", namespaces={'a': element.nsmap[None]})
+                heading = ''.join(xpath(element.heading))
             except AttributeError:
                 heading = None
 
